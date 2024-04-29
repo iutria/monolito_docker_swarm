@@ -1,0 +1,50 @@
+services:
+  db_task:
+    container_name: db_task
+    image: iutria/db_task
+    build:
+      context: ./bd
+      dockerfile: Dockerfile
+    ports: 
+      - 3306:3306
+    hostname: db_task
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+  front-task:
+    container_name: front_task
+    image: iutria/front_task
+    build:
+      context: ./task
+      dockerfile: Dockerfile
+    ports: 
+      - 80:80
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+
+  back_task:
+    container_name: back_task
+    image: iutria/back_task
+    build:
+      context: ./back-docker
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    hostname: back_task
+    environment:
+      CONNECTION_URI: mysql://root:root@db_task:3306/tasks
+      PORT: 3000
+    depends_on:
+      - db_task
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+    
